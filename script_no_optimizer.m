@@ -67,7 +67,7 @@ t_packedweightforSGD  = g_packed_weight;
 t_iteration_time = 10000;
 
 %a cost data storage for further ploting
-t_record_cost_data = zeros(t_iteration_time, 1);
+t_record_cost_data = zeros(t_iteration_time/100, 1);
 
 %a gate whether we do gradient descent
 g_do_gradient_descent = false;
@@ -89,11 +89,12 @@ if(g_do_gradient_descent == true)
         %simply compute the gradient
         t_packedweightforSGD = t_packedweightforSGD - g_h_learning_rate * t_gradient_param;
         
-        %record the cost for plot
-        t_record_cost_data(i) = t_cost_param;
+        
         %output the cost to console every 100 iterate, so that we know
         %whether it is working, and the progress so far
         if( rem(i, 100) == 0)
+            %record the cost for plot
+            t_record_cost_data(i/100) = t_cost_param;
             fprintf('update cost, current cost %.6f,\n',t_cost_param);
         end
     end

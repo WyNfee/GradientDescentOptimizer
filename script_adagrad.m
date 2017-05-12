@@ -1,5 +1,5 @@
 %This Script is targeting on using ReLu neuron and BGD to do a digit recognition
-%using common gradient descent approach(Momentum)
+%using Adaptive Gradient (Adagrad)
 
 %It is a full connection neuron network with only 1 hidden layer with 100 hidden neurons and 1 output
 %the final determine function is using softmax classifier
@@ -72,11 +72,12 @@ t_record_cost_data = zeros(t_iteration_time/100, 1);
 %a gate whether we do gradient descent
 g_do_gradient_descent = false;
 
-%momentum parameter
-t_momentum_param = 0.9;
+%adagrad param
+t_adagrad_param = 1e-6;
 
-%momentum updater
-t_momentum_updater = zeros(size(t_packedweightforSGD));
+%adagrad updater
+t_adagrad_updater = zeros(size(t_packedweightforSGD));
+
 
 if(g_do_gradient_descent == true)
     %do gradient descent
@@ -91,16 +92,17 @@ if(g_do_gradient_descent == true)
 
         %find the cost and gradient
         [t_cost_param, t_gradient_param] = function_NN_Learning_Algorithm(t_packedweightforSGD,t_rand_picked_data, t_rand_picked_answer, g_layer_one_size, g_layer_two_size, g_h_reularization_param);
+        t_adagrad_updater = t_adagrad_updater + t_gradient_param;
+        t_adagrad_adjust_weight = sqrt(t_adagrad_updater.^2 + t_adagrad_param);
+        t_adagrad_adjust_weight = (g_h_learning_rate ./ t_adagrad_adjust_weight) .* t_gradient_param;
+        t_packedweightforSGD = t_packedweightforSGD - t_adagrad_adjust_weight;
         
-        %momentum updater
-        t_momentum_updater = t_momentum_param * t_momentum_updater + g_h_learning_rate * t_gradient_param;
-        t_packedweightforSGD = t_packedweightforSGD - t_momentum_updater;
         
         
         %output the cost to console every 100 iterate, so that we know
         %whether it is working, and the progress so far
         if( rem(i, 100) == 0)
-            %record the cost for plot
+            %record the cost for plot every 100 times
             t_record_cost_data(i/100) = t_cost_param;
             fprintf('update cost, current cost %.6f,\n',t_cost_param);
         end
@@ -112,7 +114,7 @@ if(g_do_gradient_descent == true)
     s = input('save the loss data, close the gate and run a gain using the loss data can create plot?, y to save:','s');
     
     if(s == 'y')
-        save('data_momentum.mat', 't_packedweightforSGD', 't_record_cost_data');
+        save('data_adagrad.mat', 't_packedweightforSGD', 't_record_cost_data');
         fprintf('Data Saved\n');
     else
         fprintf('No Data Saved\n');
@@ -123,26 +125,26 @@ else
     %algorithm again
     
     %plot the gradient descent
-    load('data_momentum.mat');
+    load('data_adagrad.mat');
     
     %prepare the data for plot
     t_cost_data_size = length(t_record_cost_data);
-    t_cost_data_momentum = zeros(t_cost_data_size, 2);
+    t_cost_data_adagrad = zeros(t_cost_data_size, 2);
     
     for i = 1 : t_cost_data_size
         
-        t_cost_data_momentum(i, 1) = i;
-        t_cost_data_momentum(i, 2) = t_record_cost_data(i);
+        t_cost_data_adagrad(i, 1) = i;
+        t_cost_data_adagrad(i, 2) = t_record_cost_data(i);
         
     end
     
     %plot the data
-    plot(t_cost_data_momentum(:,1), t_cost_data_momentum(:,2),'--');
+    plot(t_cost_data_adagrad(:,1), t_cost_data_adagrad(:,2),'--');
     
     %Save the data to compare with other learning algorithm
     s = input('save the plot data?, y to save:','s');
     if(s == 'y')
-        save('data_lost_momentum.mat', 't_cost_data_momentum');
+        save('data_lost_adagrad.mat', 't_cost_data_adagrad');
         fprintf('Data Saved\n');
     else
          fprintf('No Data Saved\n');
